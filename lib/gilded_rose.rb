@@ -15,20 +15,23 @@ class GildedRose
         change_quality_after_sell_date
       end
       @days_remaining = @days_remaining - 1
+      return_correct_range!
     end
   end
 
   private 
 
+  def return_correct_range!
+      @quality = 0 if @quality < 0
+      @quality = 50 if @quality > 50
+  end
+
+
   def change_quality_before_sell_by
     if quality_decreases_over_time?
-      if @quality > 0
-        @quality = @quality - 1
-        if conjured?
-          if @quality > 0
-            @quality = @quality-1
-          end
-        end
+      @quality = @quality - 1
+      if conjured?
+        @quality = @quality-1
       end
     else
       increase_quality
@@ -37,23 +40,14 @@ class GildedRose
   
   def change_quality_after_sell_date
     if quality_decreases_over_time?
-      if @quality >= 2
-        @quality = @quality - 2
-        if conjured?
-          if @quality >= 2
-            @quality = @quality - 2
-          end
-        end
+      @quality = @quality - 2
+      if conjured?
+      @quality = @quality - 2
       end
     elsif backstage_pass?
-        @quality = @quality - @quality 
+      @quality = @quality - @quality 
     else
-      if @quality < 50
-        @quality = @quality + 1 
-      end 
-      if @quality < 50
-        @quality = @quality + 1
-      end
+      @quality = @quality + 2 
     end
   end
 
@@ -65,27 +59,21 @@ class GildedRose
     !(@name.downcase =~ /^conj/).nil?
   end
 
-
   def increase_quality
-    if @quality < 50
-      @quality = @quality + 1
-      if backstage_pass?
-        if @days_remaining < 11
-          if @quality < 50
-            @quality = @quality + 1
-          end
-        end
-        if @days_remaining < 6
-          if @quality < 50
-            @quality = @quality + 1
-          end
-        end
-      end
+    @quality = @quality + 1
+    if backstage_pass?
+      increase_quality_for_backstage_pass
     end
   end
 
-
-  
+  def increase_quality_for_backstage_pass
+    if @days_remaining < 11
+      @quality = @quality + 1
+    end
+    if @days_remaining < 6
+      @quality = @quality + 1
+    end
+  end
 
   def quality_decreases_over_time?
     @name != "Aged Brie" and @name != "Backstage passes to a TAFKAL80ETC concert"
