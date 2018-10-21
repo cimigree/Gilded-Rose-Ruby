@@ -1,51 +1,67 @@
-class GildedRose
-  attr_reader :name, :days_remaining, :quality
-
-  def initialize(name:, days_remaining:, quality:)
-    @name = name
-    @days_remaining = days_remaining
-    @quality = quality
-    @unchangeable_item if @name == "Sulfuras, Hand of Ragnaros"
-  end
-
-  def tick
-    return if @unchangeable_item
-    age_item
-    @quality = 0 if @quality < 0
-    @quality = 50 if @quality >= 50
-    @days_remaining -= 1
-  end
-
-
-  def age_item
-    case @name
-      when "Aged Brie" then age_brie
-      when "Backstage passes to a TAFKAL80ETC concert" then age_backstage_passes
-      when "Conjured Mana Cake" then age_conjured
-      else age_normal_item
+module GildedRose
+  class Item
+    attr_reader :days_remaining, :quality
+    
+    def initialize(days_remaining, quality)
+      @days_remaining, @quality = days_remaining, quality
+    end
+  
+    def tick
+      @days_remaining -= 1
+      @quality = 0 if @quality < 0
+      @quality = 50 if @quality > 50
     end
   end
 
-  def age_brie
-    @days_remaining > 0 ? @quality += 1 : @quality += 2
+  class NormalItem < Item
+    def tick
+      @quality -= 1
+      @quality -= 1 if @days_remaining <= 0
+      super
+    end
+  end
+  
+  class Brie < Item
+    def tick
+      @quality += 1
+      @quality += 1 if @days_remaining <= 0
+      super
+    end
   end
 
-  def age_backstage_passes
-    if @days_remaining <= 0
-      return @quality = 0 
-    else
+  class BackstagePass < Item
+    def tick
       @quality += 1
       @quality += 1 if @days_remaining <= 10
       @quality += 1 if @days_remaining <= 5
+      @quality = 0 if @days_remaining <= 0
+      super
     end
   end
 
-  def age_conjured
-    age_normal_item
-    age_normal_item
+  class Conjured < Item
+    def tick
+      @quality -= 2
+      @quality -= 2 if @days_remaining <= 0
+      super
+    end
   end
 
-  def age_normal_item
-    @days_remaining > 0 ? @quality -= 1 : @quality -= 2
+  class Sulfurus < Item
+    def tick
+    end
   end
+
+  ITEM_CLASSES = {
+    'Normal Item' => NormalItem,
+    'Aged Brie' => Brie,
+    'Backstage passes to a TAFKAL80ETC concert' => BackstagePass,
+    'Conjured Mana Cake' => Conjured,
+    'Sulfuras, Hand of Ragnaros' => Sulfurus
+  }
+
+  def self.new(name:, days_remaining:, quality:)
+    ITEM_CLASSES[name].new(days_remaining, quality)
+  end
+
 end
